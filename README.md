@@ -3,6 +3,8 @@
 
 A Windows app I made to quickly switch between environments. For example, if you wanna quickly switch from Gaming Mode, where you have Steam and games open, to a Study Mode.
 
+Built with **.NET Framework** and **(WinForms)** in C#. Uses the `System.Diagnostics.Process` class to enumerate running processes. Lightweight and native to Windows.
+
 
 ## How to use
 1. Click "Load Programs" to see what's currently running
