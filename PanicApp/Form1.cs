@@ -20,6 +20,14 @@
             );*/
         }
 
+        Dictionary<string, Process> runningProcesses = new Dictionary<string, Process>();
+        Dictionary<string, Process> processesToClose = new Dictionary<string, Process>();
+        Dictionary<string, Process> processesToOpen = new Dictionary<string, Process>();
+
+        // Try paths for opening programs
+        Dictionary<string, string> programPathsToOpen = new Dictionary<string, string>();
+
+
         public void LoadRunningPrograms()
         {
             programsListBox.Items.Clear();
@@ -36,6 +44,7 @@
                     if (!string.IsNullOrEmpty(i.MainWindowTitle)) // taking method from .NET String class
                     {
                         programsListBox.Items.Add(i.MainWindowTitle);
+                        runningProcesses[i.MainWindowTitle] = i;
                     }
 
                 }
@@ -49,22 +58,21 @@
 
         }
 
+        //This is the Button for closing windows.
         private void button1_Click(object sender, EventArgs e)
         {
 
-            if (programsListBox.Items.Count <= 0)
+            if (programsListToClose.Items.Count <= 0)
             {
-                foreach (var item in programsListToClose.Items)
-                {
-                    CloseProcessByWindowTitle(item.ToString());
-                }
+                MessageBox.Show("Empty close windows list box.");
             }
             else
             {
                 int closedCount = 0;
 
-                foreach (var item in programsListToClose.Items)
+                foreach (var item in processesToClose)
                 {
+                    //MessageBox.Show(item.ToString());
                     string programName = item.ToString();
 
                     /* DialogResult result = MessageBox.Show(
@@ -75,24 +83,24 @@
                     ); */
 
                     //if (result == DialogResult.Yes)
-                    CloseProcessByWindowTitle(programName);
-                    closedCount++;
+                    CloseProcess(item.Value);
+
 
                 }
+
             }
-            ;
+
+            programsListToClose.Items.Clear();
+            processesToClose.Clear();
+
         }
 
-        private void CloseProcessByWindowTitle(string windowTitle)
+        private void CloseProcess(Process process)
         {
-            Process[] processes = Process.GetProcesses();
-            foreach (Process p in processes)
+            process.CloseMainWindow();
+            if (!process.WaitForExit(3000)) // to avoid zombies
             {
-                if (p.MainWindowTitle == windowTitle)
-                {
-                    p.CloseMainWindow(); // try p.Kill if doesn't work
-                    break;
-                }
+                process.Kill();
             }
         }
 
@@ -104,7 +112,7 @@
 
         private void button2_Click_1(object sender, EventArgs e)
         {
-            Console.WriteLine("button2 clicked!");
+            //Console.WriteLine("button2 clicked!");
             //MessageBox.Show("button2 clicked!");
             LoadRunningPrograms();
             MessageBox.Show($"Loaded {programsListBox.Items.Count} programs!");
@@ -123,18 +131,16 @@
                 return;
             }
 
-            //MessageBox.Show($"selected {programsListBox.SelectedItem.ToString()}");
+            string title = programsListBox.SelectedItem.ToString();
 
-            //Add to programs to CLOSE list
-
-            if (programsListToClose.Items.Contains(programsListBox.SelectedItem))
+            if (processesToClose.ContainsKey(title))
             {
+                return;
+            }
 
-            }
-            else
-            {
-                programsListToClose.Items.Add(programsListBox.SelectedItem);
-            }
+            processesToClose.Add(title, runningProcesses[title]);
+            programsListToClose.Items.Add(title);
+
         }
 
         private void programsListToClose_SelectedIndexChanged(object sender, EventArgs e)
@@ -147,6 +153,20 @@
         private void button4_Click(object sender, EventArgs e)
         {
 
+            if (programsListToClose.SelectedItem == null)
+            {
+                MessageBox.Show("Click on the \"Programs to Close\" box item to select the item to be unadded.");
+                return;
+            }
+
+
+            string title = programsListToClose.SelectedItem.ToString();
+            if (processesToClose.ContainsKey(title))
+            {
+                processesToClose.Remove(title);
+            }
+
+            programsListToClose.Items.Remove(title);
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -157,6 +177,51 @@
         private void listBox1_SelectedIndexChanged_1(object sender, EventArgs e)
         {
 
+        }
+
+        // Select path button for opening programs
+        private void button5_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*";
+            openFileDialog.Title = "Select Program to Open";
+            openFileDialog.Multiselect = true;
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                foreach (string filePath in openFileDialog.FileNames)
+                {
+                    string displayName = Path.GetFileName(filePath);
+
+                    if (!programPathsToOpen.ContainsKey(displayName))
+                    {
+                        programPathsToOpen.Add(displayName, filePath);
+                        programsToOpenListBox.Items.Add(displayName);
+                    }
+                }
+            }
+        }
+
+        private void runPathButton_Click(object sender, EventArgs e)
+        {
+            if (programPathsToOpen.Count == 0)
+            {
+                return;
+            }
+            int openedCount = 0;
+
+            foreach (var item in programPathsToOpen)
+            {
+                try
+                {
+                    Process.Start(item.Value);
+                    openedCount++;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to open {item.Key}: {ex.Message}");
+                }
+            }
         }
     }
 }
