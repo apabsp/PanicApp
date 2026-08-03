@@ -1,7 +1,9 @@
 <img width="804" height="491" alt="image" src="https://github.com/user-attachments/assets/f4304e72-59ad-41f1-b32c-00c1eab992cf" />
 
 
-A Windows app I made to quickly switch between environments. For example, if you wanna quickly switch from Gaming Mode, where you have Steam and games open, to a Study Mode.
+A Windows app I made to quickly switch between environments. 
+
+For example, if you wanna quickly switch from Gaming Mode(Steam and Games open) to a Study Mode(Obsidian open).
 
 Built with **.NET Framework** and **(WinForms)** in C#. Uses the `System.Diagnostics.Process` class to enumerate running processes. Lightweight and native to Windows.
 
